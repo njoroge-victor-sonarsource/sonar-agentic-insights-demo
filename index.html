@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SC-47867 — Agentic Insights</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0D1117;
+    color: #C9D1D9;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 40px 24px 64px;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    max-width: 860px;
+    margin: 0 auto 32px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .page-title { font-size: 18px; font-weight: 700; color: #fff; }
+  .page-sub   { font-size: 13px; color: #6E7681; margin-top: 3px; }
+  .branch-tag {
+    font-family: monospace;
+    font-size: 11px;
+    color: #79A6F6;
+    background: rgba(61,114,215,0.08);
+    border: 1px solid rgba(61,114,215,0.25);
+    padding: 4px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── Router strip ── */
+  .router-strip {
+    max-width: 860px;
+    margin: 0 auto 28px;
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-left: 3px solid #8B5CF6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .router-label {
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #A78BFA;
+    flex-shrink: 0;
+  }
+  .router-desc { font-size: 12px; color: #6E7681; flex-shrink: 0; }
+  .divider { color: #30363D; }
+  .chip {
+    font-family: monospace;
+    font-size: 11px;
+    color: #6E7681;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid #30363D;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* ── Tabs ── */
+  .tabs-wrap { max-width: 860px; margin: 0 auto; }
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid #21262D;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 18px 10px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #6E7681;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    bottom: -1px;
+    font-family: inherit;
+    transition: color .15s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: #C9D1D9; }
+  .tab-btn.active { color: #fff; border-bottom-color: #3D72D7; }
+  .tab-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── Persona card ── */
+  .persona-card {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .persona-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+  .persona-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .persona-role { font-size: 12px; color: #6E7681; margin-bottom: 8px; }
+  .jtbd {
+    font-size: 12px;
+    color: #C9D1D9;
+    background: rgba(61,114,215,0.06);
+    border-left: 2px solid #3D72D7;
+    padding: 6px 10px;
+    border-radius: 0 5px 5px 0;
+  }
+
+  /* ── Scenario ── */
+  .scenario-block {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .scenario-label {
+    padding: 8px 14px;
+    background: #0D1117;
+    border-bottom: 1px solid #21262D;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: #6E7681;
+  }
+  .scenario-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .prompt {
+    font-size: 13px;
+    color: #C9D1D9;
+    font-style: italic;
+  }
+  .prompt::before { content: '"'; color: #6E7681; }
+  .prompt::after  { content: '"'; color: #6E7681; }
+  .skills-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .skills-row-label { font-size: 11px; color: #6E7681; }
+  .skill-tag {
+    font-family: monospace;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 4px;
+  }
+  .skill-tag.router { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); color: #A78BFA; }
+  .skill-tag.history { background: rgba(20,184,166,0.08); border: 1px solid rgba(20,184,166,0.25); color: #5EEAD4; }
+  .skill-tag.portfolio { background: rgba(233,122,34,0.08); border: 1px solid rgba(233,122,34,0.25); color: #FBB968; }
+  .arrow { color: #30363D; font-size: 12px; }
+
+  /* ── Dashboard preview ── */
+  .preview-block {
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .preview-label {
+    padding: 8px 14px;
+    background: #0D1117;
+    border-bottom: 1px solid #21262D;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: #3FB950;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .preview-body { padding: 0; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #6E7681;
+    padding: 9px 14px;
+    text-align: left;
+    border-bottom: 1px solid #21262D;
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(33,38,45,0.7);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .proj-name { font-weight: 600; color: #fff; }
+  .proj-key  { font-family: monospace; font-size: 10px; color: #6E7681; }
+
+  /* Rating badges */
+  .r { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:3px; font-size:11px; font-weight:800; color:#fff; }
+  .rA { background:#1A7F37; } .rB { background:#4C9E3F; } .rC { background:#9A6700; } .rD { background:#CF222E; } .rE { background:#7D1018; }
+
+  /* QG badges */
+  .qg { font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px; }
+  .qg-pass { background:rgba(31,136,61,0.15); border:1px solid rgba(31,136,61,0.3); color:#3FB950; }
+  .qg-fail { background:rgba(207,34,46,0.15); border:1px solid rgba(207,34,46,0.3); color:#F85149; }
+  .qg-warn { background:rgba(154,103,0,0.15); border:1px solid rgba(154,103,0,0.3); color:#D29922; }
+
+  /* Delta */
+  .delta-up   { color: #F85149; font-weight: 600; }
+  .delta-down { color: #3FB950; font-weight: 600; }
+  .delta-flat { color: #6E7681; }
+
+  /* Priority bar */
+  .pbar { height:5px; width:72px; background:#21262D; border-radius:3px; overflow:hidden; display:inline-block; vertical-align:middle; }
+  .pfill { height:100%; border-radius:3px; }
+
+  /* Metric row (compact KV) */
+  .kv-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .kv {
+    padding: 14px 16px;
+    border-right: 1px solid #21262D;
+  }
+  .kv:last-child { border-right: none; }
+  .kv-label { font-size: 10px; color: #6E7681; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .kv-value { font-size: 22px; font-weight: 800; color: #fff; line-height: 1; }
+  .kv-sub   { font-size: 11px; margin-top: 3px; }
+
+  /* Code output */
+  .code-out {
+    font-family: monospace;
+    font-size: 12px;
+    color: #A5D6FF;
+    padding: 14px 16px;
+    line-height: 1.8;
+    background: #0D1117;
+  }
+  .ck { color: #FF7B72; }
+  .cv { color: #A5D6FF; }
+  .cn { color: #79C0FF; }
+  .cm { color: #6E7681; }
+
+  @media (max-width: 640px) {
+    .kv-grid { grid-template-columns: repeat(2, 1fr); }
+    .page-header { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Page header -->
+<div class="page-header">
+  <div>
+    <div class="page-title">SC-47867 — History Retrieval Skills</div>
+    <div class="page-sub">MMF-5571 · O&R data exposed to AI agents · SonarQube Cloud</div>
+  </div>
+  <div class="branch-tag">SC-47867-add-history-retrieval-skills</div>
+</div>
+
+<!-- Router strip -->
+<div class="router-strip">
+  <span class="router-label">⚡ sonar-measures</span>
+  <span class="router-desc">Router — classifies intent, dispatches to:</span>
+  <span class="chip">sonar-measures-history</span>
+  <span class="chip">sonar-issue-count-history</span>
+  <span class="chip">sonar-portfolio-measures</span>
+  <span class="chip">sonar-portfolio-rankings</span>
+  <span class="chip">sonar-portfolio-project-measures</span>
+</div>
+
+<!-- Tabs -->
+<div class="tabs-wrap">
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="show('em', this)">
+      <div class="tab-avatar" style="background:linear-gradient(135deg,#3D72D7,#8B5CF6)">S</div>
+      Engineering Manager
+    </button>
+    <button class="tab-btn" onclick="show('tl', this)">
+      <div class="tab-avatar" style="background:linear-gradient(135deg,#14B8A6,#3D72D7)">M</div>
+      Tech Lead
+    </button>
+    <button class="tab-btn" onclick="show('pe', this)">
+      <div class="tab-avatar" style="background:linear-gradient(135deg,#F59E0B,#E97A22)">A</div>
+      Platform Engineer
+    </button>
+  </div>
+
+  <!-- ══ ENGINEERING MANAGER ══ -->
+  <div id="tab-em" class="tab-pane active">
+
+    <div class="persona-card">
+      <div class="persona-avatar" style="background:linear-gradient(135deg,#3D72D7,#8B5CF6)">S</div>
+      <div>
+        <div class="persona-name">Sarah Chen — Engineering Manager</div>
+        <div class="persona-role">4 portfolios · 47 projects · 12 squads</div>
+        <div class="jtbd">When managing a large portfolio, I want the agent to surface security debt trends across my org so I can make resourcing decisions without manual data exports.</div>
+      </div>
+    </div>
+
+    <div class="scenario-block">
+      <div class="scenario-label">Scenario</div>
+      <div class="scenario-body">
+        <div class="prompt">Which 5 projects in the Finance portfolio have the highest security debt growth over the last 30 days?</div>
+        <div class="skills-row">
+          <span class="skills-row-label">Skills invoked</span>
+          <span class="skill-tag router">sonar-measures (router)</span>
+          <span class="arrow">→</span>
+          <span class="skill-tag portfolio">sonar-portfolio-rankings</span>
+          <span class="arrow">+</span>
+          <span class="skill-tag history">sonar-measures-history</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-block">
+      <div class="preview-label">✓ What Sarah sees</div>
+      <div class="preview-body">
+        <!-- Summary row -->
+        <div class="kv-grid" style="border-bottom:1px solid #21262D;">
+          <div class="kv">
+            <div class="kv-label">Portfolio Rating</div>
+            <div class="kv-value" style="color:#D29922;">C</div>
+            <div class="kv-sub delta-up">↑ was B (30d ago)</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">New Security Issues</div>
+            <div class="kv-value" style="color:#F85149;">+847</div>
+            <div class="kv-sub delta-up">↑ 34% vs prior period</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">QG Failures</div>
+            <div class="kv-value" style="color:#F85149;">8</div>
+            <div class="kv-sub delta-up">↑ was 5</div>
+          </div>
+          <div class="kv">
+            <div class="kv-label">Coverage (avg)</div>
+            <div class="kv-value" style="color:#3FB950;">71%</div>
+            <div class="kv-sub delta-flat">→ stable</div>
+          </div>
+        </div>
+        <!-- Ranking table -->
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Project</th>
+              <th>Security Issues</th>
+              <th>Δ 30d</th>
+              <th>Reliability</th>
+              <th>QG</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:#F85149;font-weight:700;">1</td>
+              <td><div class="proj-name">payments-gateway</div><div class="proj-key">fin:pay-gw</div></td>
+              <td style="font-weight:700;">312</td>
+              <td class="delta-up">+89 ▲</td>
+              <td><span class="r rD">D</span></td>
+              <td><span class="qg qg-fail">FAILED</span></td>
+            </tr>
+            <tr>
+              <td style="color:#D29922;font-weight:700;">2</td>
+              <td><div class="proj-name">risk-scoring-svc</div><div class="proj-key">fin:risk-svc</div></td>
+              <td style="font-weight:700;">198</td>
+              <td class="delta-up">+67 ▲</td>
+              <td><span class="r rC">C</span></td>
+              <td><span class="qg qg-fail">FAILED</span></td>
+            </tr>
+            <tr>
+              <td style="color:#D29922;font-weight:700;">3</td>
+              <td><div class="proj-name">fraud-detection-ml</div><div class="proj-key">fin:fraud-ml</div></td>
+              <td style="font-weight:700;">145</td>
+              <td class="delta-up">+41 ▲</td>
+              <td><span class="r rC">C</span></td>
+              <td><span class="qg qg-warn">WARN</span></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><div class="proj-name">ledger-core</div><div class="proj-key">fin:ledger</div></td>
+              <td>89</td>
+              <td class="delta-up">+28 ▲</td>
+              <td><span class="r rB">B</span></td>
+              <td><span class="qg qg-warn">WARN</span></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><div class="proj-name">kyc-api</div><div class="proj-key">fin:kyc</div></td>
+              <td>55</td>
+              <td class="delta-up">+12 ▲</td>
+              <td><span class="r rB">B</span></td>
+              <td><span class="qg qg-pass">PASSED</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TECH LEAD ══ -->
+  <div id="tab-tl" class="tab-pane">
+
+    <div class="persona-card">
+      <div class="persona-avatar" style="background:linear-gradient(135deg,#14B8A6,#3D72D7)">M</div>
+      <div>
+        <div class="persona-name">Marcus Webb — Tech Lead</div>
+        <div class="persona-role">Platform-Core Portfolio · 8 projects · 2-week sprints</div>
+        <div class="jtbd">Before every sprint, I want the agent to rank quality gate failures by impact so I stop making gut-feel prioritization decisions.</div>
+      </div>
+    </div>
+
+    <div class="scenario-block">
+      <div class="scenario-label">Scenario</div>
+      <div class="scenario-body">
+        <div class="prompt">Find all my projects with a failing Quality Gate and rank which ones to fix first based on issue count trends and reliability rating.</div>
+        <div class="skills-row">
+          <span class="skills-row-label">Skills invoked</span>
+          <span class="skill-tag router">sonar-measures (router)</span>
+          <span class="arrow">→</span>
+          <span class="skill-tag portfolio">sonar-portfolio-project-measures</span>
+          <span class="arrow">+</span>
+          <span class="skill-tag history">sonar-issue-count-history</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-block">
+      <div class="preview-label">✓ What Marcus sees</div>
+      <div class="preview-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Priority</th>
+              <th>Project</th>
+              <th>QG</th>
+              <th>Total Issues</th>
+              <th>Velocity</th>
+              <th>Reliability</th>
+              <th>AI Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span style="color:#F85149;font-weight:700;font-size:11px;">P0</span></td>
+              <td><div class="proj-name">auth-service</div><div class="proj-key">plat:auth-svc</div></td>
+              <td><span class="qg qg-fail">FAILED</span></td>
+              <td style="font-weight:700;">1,247</td>
+              <td class="delta-up">+34/day</td>
+              <td><span class="r rD">D</span></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div class="pbar"><div class="pfill" style="width:92%;background:#F85149;"></div></div>
+                  <span style="font-size:11px;font-weight:700;color:#F85149;">92</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span style="color:#F85149;font-weight:700;font-size:11px;">P0</span></td>
+              <td><div class="proj-name">api-gateway</div><div class="proj-key">plat:api-gw</div></td>
+              <td><span class="qg qg-fail">FAILED</span></td>
+              <td style="font-weight:700;">892</td>
+              <td class="delta-up">+18/day</td>
+              <td><span class="r rC">C</span></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div class="pbar"><div class="pfill" style="width:81%;background:#F85149;"></div></div>
+                  <span style="font-size:11px;font-weight:700;color:#F85149;">81</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span style="color:#D29922;font-weight:700;font-size:11px;">P1</span></td>
+              <td><div class="proj-name">config-manager</div><div class="proj-key">plat:cfg-mgr</div></td>
+              <td><span class="qg qg-fail">FAILED</span></td>
+              <td>445</td>
+              <td class="delta-up">+7/day</td>
+              <td><span class="r rC">C</span></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div class="pbar"><div class="pfill" style="width:64%;background:#D29922;"></div></div>
+                  <span style="font-size:11px;font-weight:700;color:#D29922;">64</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span style="color:#D29922;font-weight:700;font-size:11px;">P1</span></td>
+              <td><div class="proj-name">notification-svc</div><div class="proj-key">plat:notif</div></td>
+              <td><span class="qg qg-warn">WARN</span></td>
+              <td>213</td>
+              <td class="delta-down">−2/day</td>
+              <td><span class="r rB">B</span></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div class="pbar"><div class="pfill" style="width:38%;background:#6E7681;"></div></div>
+                  <span style="font-size:11px;font-weight:700;color:#6E7681;">38</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ PLATFORM ENGINEER ══ -->
+  <div id="tab-pe" class="tab-pane">
+
+    <div class="persona-card">
+      <div class="persona-avatar" style="background:linear-gradient(135deg,#F59E0B,#E97A22)">A</div>
+      <div>
+        <div class="persona-name">Alex Rivera — Platform Engineer</div>
+        <div class="persona-role">Developer Experience · Internal Tooling · Reporting pipelines</div>
+        <div class="jtbd">I need to pull SonarQube Cloud compliance metrics into our BI dashboard — structured and consistent, without deprecated metric noise or one-off API scripts.</div>
+      </div>
+    </div>
+
+    <div class="scenario-block">
+      <div class="scenario-label">Scenario</div>
+      <div class="scenario-body">
+        <div class="prompt">Fetch the releasability ratings for all portfolios and format them as JSON for our internal reporting tool.</div>
+        <div class="skills-row">
+          <span class="skills-row-label">Skills invoked</span>
+          <span class="skill-tag router">sonar-measures (router)</span>
+          <span class="arrow">→</span>
+          <span class="skill-tag portfolio">sonar-portfolio-measures</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-block">
+      <div class="preview-label">✓ What Alex sees</div>
+      <div class="preview-body">
+        <div class="code-out"><span class="cm">{
+  "organization": "sonarsource",
+  "generated_at": "2026-06-04T09:12:00Z",
+  "portfolios": [</span>
+    { <span class="ck">"key"</span>: <span class="cv">"portfolio:finance"</span>,     <span class="ck">"releasability_rating"</span>: <span class="cv">"C"</span>, <span class="ck">"security_rating"</span>: <span class="cv">"D"</span>, <span class="ck">"quality_gate"</span>: <span class="cv">"FAILED"</span> },
+    { <span class="ck">"key"</span>: <span class="cv">"portfolio:platform"</span>,    <span class="cv">"releasability_rating"</span>: <span class="cv">"B"</span>, <span class="ck">"security_rating"</span>: <span class="cv">"C"</span>, <span class="ck">"quality_gate"</span>: <span class="cv">"WARN"</span>   },
+    { <span class="ck">"key"</span>: <span class="cv">"portfolio:mobile"</span>,      <span class="ck">"releasability_rating"</span>: <span class="cv">"A"</span>, <span class="ck">"security_rating"</span>: <span class="cv">"A"</span>, <span class="ck">"quality_gate"</span>: <span class="cv">"PASSED"</span> },
+    { <span class="ck">"key"</span>: <span class="cv">"portfolio:devops"</span>,      <span class="ck">"releasability_rating"</span>: <span class="cv">"A"</span>, <span class="ck">"security_rating"</span>: <span class="cv">"A"</span>, <span class="ck">"quality_gate"</span>: <span class="cv">"PASSED"</span> }
+  <span class="cm">]
+}</span>
+        </div>
+        <div style="padding:10px 16px; border-top:1px solid #21262D; font-size:11px; color:#6E7681; display:flex; gap:16px;">
+          <span>✓ Deprecated metrics excluded automatically</span>
+          <span>✓ PAT-scoped to user's org access</span>
+          <span>✓ Ready for Tableau / BI import</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
