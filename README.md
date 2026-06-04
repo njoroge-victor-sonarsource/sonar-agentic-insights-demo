@@ -1,33 +1,23 @@
-# SC-47867 — Agentic Insights for SonarQube Cloud
+# SC-47867 Agentic Insights Demo
 
-**MMF-5571** · Enhance MCP/Sonar-CLI for AI-powered insights & reporting
+SC-47867 Agentic Insights demo — SonarQube Cloud Portfolio skills.
 
-Live demo: [GitHub Pages link below]
+This demo showcases the History Retrieval Skills feature (MMF-5571) — O&R data exposed to AI agents via SonarQube Cloud.
 
-## What this shows
+## Live Demo
 
-Five new history-retrieval skills that expose SonarQube Cloud's O&R (Organization & Reporting) data layer to AI agents — enabling portfolio audits, trend analysis, and automated reporting without manual data exports.
+https://njoroge-victor-sonarsource.github.io/sonar-agentic-insights-demo
 
-### Skills
+## Personas
 
-| Skill | Scope | Persona |
-|---|---|---|
-| `sonar-measures` | Router | All |
-| `sonar-measures-history` | Project · Branch | EM · Tech Lead · Platform Eng |
-| `sonar-issue-count-history` | Project · Branch · **Portfolio** | EM · Tech Lead |
-| `sonar-portfolio-measures` | Portfolio aggregate | EM · Platform Eng |
-| `sonar-portfolio-rankings` | Portfolio → ranked projects | EM · Tech Lead |
-| `sonar-portfolio-project-measures` | Portfolio → individual project | Tech Lead |
+- **Engineering Manager** — surface security debt trends across the org
+- **Tech Lead** — rank quality gate failures by impact for sprint planning
+- **Platform Engineer** — pull compliance metrics into BI dashboards as structured JSON
 
-### Personas
+## Skills Invoked
 
-- **Engineering Manager** — Portfolio security debt audit, executive reporting
-- **Tech Lead** — Sprint prioritization from QG failures, AI-scored backlog
-- **Platform Engineer** — Schema discovery, structured JSON export for BI tools
+- `sonar-measures` (router) — classifies intent, dispatches to sub-skills
+- `sonar-measures-history` — time-series metric data
+- `sonar-issue-count-history` — issue trend velocity
+- `sonar-portfolio-measures` — org-level portfolio aggregates
 
-## Branch
-
-[`SC-47867-add-history-retrieval-skills`](https://github.com/SonarSource/sonarqube-agent-plugins/tree/SC-47867-add-history-retrieval-skills)
-
----
-Made by the O&R squad · SonarSource
